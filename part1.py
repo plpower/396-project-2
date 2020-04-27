@@ -15,7 +15,7 @@ def exponential_weights(test_data, epsilon):
     action2 = test_data[2]
     total_payoff = 0
 
-    for r in range(len(test_data[1])):
+    for r in range(1, len(test_data[1])+1):
         # calculate the probability of chosing every action in round r 
         probabilities, payoffs = get_probabilities(r, epsilon, test_data)
         # chose action for round r with probabilities
@@ -34,6 +34,9 @@ def get_probabilities(r, e, test_data):
     for action in range(len(test_data)):
         action_payoff = sum(test_data[action + 1][:r])
         payoffs.append(action_payoff)
+        print(test_data[action+1][:r])
+        print(action_payoff)
+        print(payoffs)
     total_payoff = sum(payoffs)
 
     for action in range(len(test_data)):
