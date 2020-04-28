@@ -3,6 +3,13 @@ import numpy as np
 from scipy.stats import geom
 import math
 
+# patrice's quarantine workout (1) and ava's quarantine workouts (2)
+p_a_data = {
+    "1": [0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0],
+    "2": []
+}
+
+
 ## --------------- NOTES ------------------ ##
 # The idea here is to compare the regret of the two algorithms
 # Must implement the algorithms on random data
@@ -18,16 +25,17 @@ def exponential_weights(test_data, epsilon, h):
     for r in range(len(test_data[1])):
         # calculate the probability of chosing every action in round r 
         probabilities, round_payoffs = get_probabilities(r, epsilon, h, test_data)
-        print(probabilities, round_payoffs)
         # chose action for round r with probabilities
         action_payoff = np.random.choice(round_payoffs, p=probabilities)
         print(action_payoff)
         total_payoff += action_payoff
 
+    print('total_payoff', total_payoff)
+
     # regret is 2 * h sqrt(ln(k) / h)
     # learning rate is sqrt(ln(k) / h)
 
-    print("EW TOTAL PAYOFF", total_payoff)
+    # print("EW TOTAL PAYOFF", total_payoff)
     return total_payoff
 
 def get_probabilities(r, e, h, test_data):
@@ -64,7 +72,6 @@ def follow_perturbed_leader(test_data, epsilon):
 
     # generate hallucinations 
     hallucinations = geom.rvs(epsilon, size=len(test_data))
-    print(hallucinations)
     
     # add a halicination at round 0
     action1.insert(0, hallucinations[0])
@@ -80,14 +87,12 @@ def follow_perturbed_leader(test_data, epsilon):
             bih1, bih2 = best_in_hindsight(action1, action2, idx)
             if bih2 > bih1:
                 ftpl += action2[idx]
-                print("action 2")
             else:
                 ftpl += action1[idx]
-                print("action 1")
     
     # now we calculated payoff for FTPL
     # can further compare with OPT to get regret
-    print('FTPL TOTAL PAYOFF',ftpl)
+    # print('FTPL TOTAL PAYOFF',ftpl)
     return ftpl
 
 def best_in_hindsight(action1, action2, curr_round):
@@ -110,34 +115,113 @@ def calculate_regret(test_data, alg):
     # calculate OPT
     action_bihs = []
     for action in test_data:
-        print(test_data[action])
         action_bihs.append(sum(test_data[action]))
-    print("action_bihs", action_bihs)
     best_bih = max(action_bihs)
     
-    print(best_bih)
     regret = (best_bih - alg) / len(test_data[1])
     
     return regret
 
+def generate_data():
+    action1 = []
+    action2 = []
+
+    act1_prob = 0.5 
+    act2_prob = 0.7
+
+    for _ in range(15):
+        action1.append(np.random.choice([1, 0], p=[act1_prob, 1-act1_prob]))
+        action2.append(np.random.choice([1, 0], p=[act2_prob, 1-act2_prob]))
+    
+    test_data = {}
+    test_data[1] = action1
+    test_data[2] = action2
+
+    return test_data
+
+def empricial_anal(test_data, emp_epsilon, alg_name, h):
+    best_e = 0
+    best_payoff = 0
+    payoff_array = []
+    best_regret = np.inf
+    regret_array = []
+
+    for e in emp_epsilon:
+
+        if alg_name == "ew":
+            payoff = exponential_weights(test_data, e, h)
+            print("ew payoff", payoff)
+        else:
+            payoff = follow_perturbed_leader(test_data, e)
+
+        payoff_array.append(payoff)
+        regret = calculate_regret(test_data, payoff)
+        regret_array.append(regret)
+
+        if payoff > best_payoff:
+            best_payoff = payoff
+            best_regret = regret
+            best_e = e
+    
+    return best_payoff, best_regret, best_e
+
+def patrice_ava_betting():
+    h = 1
+    theo_epsilon = theo_opt_epsilon(p_a_data)
+
+    # EW
+    ew = exponential_weights(test_data, theo_epsilon, h)
+    ew_regret = calculate_regret(test_data, ew)
+    print('P V A EW REGRET', ew_regret)
+
+    # FTPL
+    ftpl = follow_perturbed_leader(test_data, theo_epsilon)
+    ftpl_regret = calculate_regret(test_data, ftpl)
+    print('P V A FTPL REGRET', ftpl_regret)
+
+
+
 
 if __name__ == "__main__":
+    # test_data = generate_data()
+    # print(test_data)
     test_data = {
-        1: [0.5, 1, 0, 0, 1],
-        2: [0, 1, 1, 1, 1]
+        1: [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0], 
+        2: [1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0]
     }
 
-    # ~calculate that~
-    epsilon = theo_opt_epsilon(test_data)
-    print(epsilon)
+    # THEORHETICAL 
+    # learning rate
+    theo_epsilon = theo_opt_epsilon(test_data)
+    print('THEO learning rate', theo_epsilon)
     h = 1
-    
-    # implement the algorithms & calculate rergret
-    ew = exponential_weights(test_data, epsilon, h)
-    ftpl = follow_perturbed_leader(test_data, epsilon)
-    
-    # compare the regrets of these two alorithms againist each other
+
+    # EW  
+    ew = exponential_weights(test_data, theo_epsilon, h) 
     ew_regret = calculate_regret(test_data, ew)
-    print('ew regret', ew_regret)
+    print('EW REGRET', ew_regret)
+
+    # FTPL 
+    ftpl = follow_perturbed_leader(test_data, theo_epsilon)
     ftpl_regret = calculate_regret(test_data, ftpl)
-    print('ftpl regret', ftpl_regret)
+    print('FTPL REGRET', ftpl_regret)
+
+    # EMPIRCAL 
+    # learning rate
+    emp_epsilon = np.arange(0.01, 0.99, 0.01)
+    h = 1
+
+    ew_payoff, ew_regret, ew_learning = empricial_anal(test_data, emp_epsilon, "ew", h)
+    # ftpl_payoff, ftpl_regret, ftpl_learning = empricial_anal(test_data, emp_epsilon, "ftpl", h)
+    
+    print('EMP EW REGRET', ew_regret)
+    print('EMP EW PAYOFF', ew_payoff)
+    print('EMP EW LEARN RATE', ew_learning)
+
+
+    # print('EMP FTPL REGRET', ftpl_regret)
+    # print('EMP FTPL PAYOFF', ftpl_payoff)
+    # print('EMP FTPL LEARN RATE', ftpl_learning)
+
+    patrice_ava_betting()
+
