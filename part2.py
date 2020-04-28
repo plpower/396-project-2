@@ -28,10 +28,12 @@ def generate_test_data(my_value):
 
 def exponential_weights(test_data, epsilon, h, opponent_bids):
     total_payoff = 0
+    all_op_bids = []
 
     for r in range(my_value + 1):
         # (1) GENERATE A RANDOM COMPETING BID FROM BID_DATA
         opponent_bid = np.random.choice(opponent_bids)
+        all_op_bids.append(opponent_bid)
 
         # (2) UPDATE TEST_DATA @ CURRENT ROUND W WHICH ACTIONS ARE WINNERS
         for key, val in test_data.items():
@@ -47,9 +49,10 @@ def exponential_weights(test_data, epsilon, h, opponent_bids):
             r, epsilon, h, test_data)
         # chose action for round r with probabilities
         action_payoff = np.random.choice(round_payoffs, p=probabilities)
-        print(action_payoff)
         total_payoff += action_payoff
     
+    print(test_data)
+    print(all_op_bids)
 
     print('total_payoff', total_payoff)
     # print("EW TOTAL PAYOFF", total_payoff)
@@ -74,9 +77,9 @@ def get_probabilities(r, e, h, test_data):
         return probs, curr_payoffs
     else:
         for action in range(number_of_actions):
-            action_payoff = test_data[action + 1][r]
+            action_payoff = test_data[action][r]
             curr_payoffs.append(action_payoff)
-            hindsight_payoff = sum(test_data[action + 1][:r])
+            hindsight_payoff = sum(test_data[action][:r])
             hindsight_payoffs.append((1+e) ** (hindsight_payoff/h))
         total_payoff = sum(hindsight_payoffs)
 
