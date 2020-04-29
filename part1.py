@@ -88,6 +88,7 @@ def follow_perturbed_leader(test_data, epsilon):
     # print('FTPL TOTAL PAYOFF',ftpl)
     return ftpl
 
+
 def best_in_hindsight(action1, action2, curr_round):
     # best in hindsight DOES NOT include the current round
     # to find BIH of entire action, all it on curr_round = length of list
@@ -140,22 +141,27 @@ def empricial_anal(test_data, emp_epsilon, alg_name, h):
     regret_array = []
 
     for e in emp_epsilon:
+        e_regrets = []
 
-        if alg_name == "ew":
-            payoff = exponential_weights(test_data, e, h)
-        else:
-            payoff = follow_perturbed_leader(test_data, e)
+        for i in range(100):
+            if alg_name == "ew":
+                payoff = exponential_weights(test_data, e, h)
+            else:
+                payoff = follow_perturbed_leader(test_data, e)
 
-        payoff_array.append(payoff)
-        regret = calculate_regret(test_data, payoff)
-        regret_array.append(regret)
+            e_regrets.append(calculate_regret(test_data, payoff))
+  
+        # payoff_array.append(payoff)
 
-        if payoff > best_payoff:
-            best_payoff = payoff
-            best_regret = regret
+        avg_regret = np.average(e_regrets)
+        regret_array.append(avg_regret)
+
+        if avg_regret < best_regret:
+            # best_payoff = payoff
+            best_regret = avg_regret
             best_e = e
     
-    return best_payoff, best_regret, best_e
+    return best_regret, best_e
 
 def patrice_ava_betting(p_a_data):
     h = 1
@@ -189,13 +195,49 @@ def patrice_ava_betting(p_a_data):
 
 
 if __name__ == "__main__":
-    test_data = generate_data()
+    # test_data = generate_data()
     # print(test_data)
-    # test_data = {
-    #     1: [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0], 
-    #     2: [1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0]
+    test_data = {
+        1: [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0], 
+        2: [1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0]
+    }
+
+    # worst_case_test_data = {
+    #     1: [.5, 0, 1, 0, 1, 0],
+    #     2: [0, 1, 0, 1, 0, 1]
     # }
 
+    # # TESTING WORST CASE SCENARIO 
+    # theo_opt_lr_worst_case = theo_opt_epsilon(worst_case_test_data)
+    # print('theoretical optimal learning rate:', theo_opt_lr_worst_case)
+
+    # # EW  
+    # ew_worst = exponential_weights(worst_case_test_data, theo_opt_lr_worst_case, 1) 
+    # ew_regret_worst = calculate_regret(worst_case_test_data, ew_worst)
+    # # print('EW REGRET WORST CASE', ew_regret_worst)
+
+    # # FTPL 
+    # ftpl_worst = follow_perturbed_leader(worst_case_test_data, theo_opt_lr_worst_case)
+    # ftpl_regret_worst = calculate_regret(worst_case_test_data, ftpl_worst)
+    # # print('FTPL REGRET WORST CASE', ftpl_regret_worst)
+
+    # # EMPIRCAL WORST CASE 
+    # # learning rate
+    # emp_epsilon = np.arange(0.01, 0.99, 0.01)
+    # h = 1
+
+    # ew_regret_worst, ew_learning_worst = empricial_anal(worst_case_test_data, emp_epsilon, "ew", 1)
+    # ftpl_regret_worst, ftpl_learning_worst = empricial_anal(worst_case_test_data, emp_epsilon, "ftpl", 1)
+    
+    # # print('EMP EW REGRET WORST CASE', ew_regret_worst)
+    # # print('EMP EW PAYOFF', ew_payoff_worst)
+    # print('EMP EW LEARN RATE', ew_learning_worst)
+
+    # # print('EMP FTPL REGRET WORST CASE', ftpl_regret_worst)
+    # # print('EMP FTPL PAYOFF WORST CASE', ftpl_payoff_worst)
+    # print('EMP FTPL LEARN RATE WORST CASE', ftpl_learning_worst)
+
+    # PART 1
     # THEORHETICAL 
     # learning rate
     theo_epsilon = theo_opt_epsilon(test_data)
@@ -217,8 +259,8 @@ if __name__ == "__main__":
     emp_epsilon = np.arange(0.01, 0.99, 0.01)
     h = 1
 
-    ew_payoff, ew_regret, ew_learning = empricial_anal(test_data, emp_epsilon, "ew", h)
-    ftpl_payoff, ftpl_regret, ftpl_learning = empricial_anal(test_data, emp_epsilon, "ftpl", h)
+    ew_regret, ew_learning = empricial_anal(test_data, emp_epsilon, "ew", h)
+    ftpl_regret, ftpl_learning = empricial_anal(test_data, emp_epsilon, "ftpl", h)
     
     print('EMP EW REGRET', ew_regret)
     # print('EMP EW PAYOFF', ew_payoff)
