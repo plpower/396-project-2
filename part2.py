@@ -1,6 +1,7 @@
 import csv
 import matplotlib.pyplot as plt
 import numpy as np
+import math
 
 data = open('bid_data.csv')
 csv_data = csv.reader(data)
@@ -88,7 +89,12 @@ def get_probabilities(r, e, h, test_data):
 
         return probabilities, curr_payoffs
 
-
+def theo_opt_epsilon(test_data):
+    k = 50
+    n = 50
+    epsilon = math.sqrt(np.log(k)/n)
+    
+    return epsilon
 
 if __name__ == "__main__":
 
@@ -103,9 +109,11 @@ if __name__ == "__main__":
     my_value = 50
     my_bid = 45
     h = my_value
-    epsilon = 0.3
+    epsilon = 0.8
 
     bid_actions = generate_test_data(my_value)
+    epsilon = theo_opt_epsilon(bid_actions)
+    print(epsilon)
 
     # WE NEED TO CALCULATE EPSILON !!!
     total_payoff = exponential_weights(bid_actions, epsilon, h, opponent_bids)
