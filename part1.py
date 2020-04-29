@@ -3,12 +3,6 @@ import numpy as np
 from scipy.stats import geom
 import math
 
-# patrice's quarantine workout (1) and ava's quarantine workouts (2)
-p_a_data = {
-    "1": [0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1, 0],
-    "2": []
-}
-
 
 ## --------------- NOTES ------------------ ##
 # The idea here is to compare the regret of the two algorithms
@@ -27,10 +21,9 @@ def exponential_weights(test_data, epsilon, h):
         probabilities, round_payoffs = get_probabilities(r, epsilon, h, test_data)
         # chose action for round r with probabilities
         action_payoff = np.random.choice(round_payoffs, p=probabilities)
-        print(action_payoff)
         total_payoff += action_payoff
 
-    print('total_payoff', total_payoff)
+    # print('total_payoff', total_payoff)
 
     # regret is 2 * h sqrt(ln(k) / h)
     # learning rate is sqrt(ln(k) / h)
@@ -129,7 +122,7 @@ def generate_data():
     act1_prob = 0.5 
     act2_prob = 0.7
 
-    for _ in range(15):
+    for _ in range(100):
         action1.append(np.random.choice([1, 0], p=[act1_prob, 1-act1_prob]))
         action2.append(np.random.choice([1, 0], p=[act2_prob, 1-act2_prob]))
     
@@ -150,7 +143,6 @@ def empricial_anal(test_data, emp_epsilon, alg_name, h):
 
         if alg_name == "ew":
             payoff = exponential_weights(test_data, e, h)
-            print("ew payoff", payoff)
         else:
             payoff = follow_perturbed_leader(test_data, e)
 
@@ -165,30 +157,44 @@ def empricial_anal(test_data, emp_epsilon, alg_name, h):
     
     return best_payoff, best_regret, best_e
 
-def patrice_ava_betting():
+def patrice_ava_betting(p_a_data):
     h = 1
     theo_epsilon = theo_opt_epsilon(p_a_data)
+    print(theo_epsilon)
 
     # EW
-    ew = exponential_weights(test_data, theo_epsilon, h)
-    ew_regret = calculate_regret(test_data, ew)
+    ew = exponential_weights(p_a_data, theo_epsilon, h)
+    ew_regret = calculate_regret(p_a_data, ew)
     print('P V A EW REGRET', ew_regret)
 
     # FTPL
-    ftpl = follow_perturbed_leader(test_data, theo_epsilon)
-    ftpl_regret = calculate_regret(test_data, ftpl)
+    ftpl = follow_perturbed_leader(p_a_data, theo_epsilon)
+    ftpl_regret = calculate_regret(p_a_data, ftpl)
     print('P V A FTPL REGRET', ftpl_regret)
 
+    emp_epsilon = np.arange(0.01, 0.99, 0.01)
+    h = 1
 
+    ew_payoff, ew_regret, ew_learning = empricial_anal(p_a_data, emp_epsilon, "ew", h)
+    ftpl_payoff, ftpl_regret, ftpl_learning = empricial_anal(p_a_data, emp_epsilon, "ftpl", h)
+
+    print('EMP EW REGRET', ew_regret)
+    # print('EMP EW PAYOFF', ew_payoff)
+    print('EMP EW LEARN RATE', ew_learning)
+
+
+    print('EMP FTPL REGRET', ftpl_regret)
+    # print('EMP FTPL PAYOFF', ftpl_payoff)
+    print('EMP FTPL LEARN RATE', ftpl_learning)
 
 
 if __name__ == "__main__":
-    # test_data = generate_data()
+    test_data = generate_data()
     # print(test_data)
-    test_data = {
-        1: [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0], 
-        2: [1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0]
-    }
+    # test_data = {
+    #     1: [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0], 
+    #     2: [1, 0, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0]
+    # }
 
     # THEORHETICAL 
     # learning rate
@@ -212,16 +218,22 @@ if __name__ == "__main__":
     h = 1
 
     ew_payoff, ew_regret, ew_learning = empricial_anal(test_data, emp_epsilon, "ew", h)
-    # ftpl_payoff, ftpl_regret, ftpl_learning = empricial_anal(test_data, emp_epsilon, "ftpl", h)
+    ftpl_payoff, ftpl_regret, ftpl_learning = empricial_anal(test_data, emp_epsilon, "ftpl", h)
     
     print('EMP EW REGRET', ew_regret)
-    print('EMP EW PAYOFF', ew_payoff)
+    # print('EMP EW PAYOFF', ew_payoff)
     print('EMP EW LEARN RATE', ew_learning)
 
 
-    # print('EMP FTPL REGRET', ftpl_regret)
+    print('EMP FTPL REGRET', ftpl_regret)
     # print('EMP FTPL PAYOFF', ftpl_payoff)
-    # print('EMP FTPL LEARN RATE', ftpl_learning)
+    print('EMP FTPL LEARN RATE', ftpl_learning)
 
-    patrice_ava_betting()
+    # germany (1) and italy (2)
+    # p_a_data = {
+    #     1: [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0],
+    #     2: [1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0]
+    # }
+
+    # patrice_ava_betting(p_a_data)
 

@@ -102,7 +102,7 @@ if __name__ == "__main__":
 
     my_value = 50
     my_bid = 45
-    h = 1
+    h = my_value
     epsilon = 0.3
 
     bid_actions = generate_test_data(my_value)
